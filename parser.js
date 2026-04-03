@@ -3056,7 +3056,7 @@ function YAMLFix(cnt){
   //2022-08-08 增加 .replace(/\*/g,"🌟@bug2") 以解决名字以 * 开始时引起的部分问题
   if (cnt.indexOf("{") != -1 && /\{\s*\"*(name|type|server)/.test(cnt)){ // - { } 类型 yaml
     cnt =  cleanYamlSpaces(cnt) // 2026-02-06 部分空格解析错误
-    cnt = cnt.replace(/(^|\n)- /g, "$1  - ").replace(/    - /g,"  - ").replace(/:(?!\s)/g,": ").replace(/\,\"/g,", \"").replace(/: {\s{0,1}/g, ": {,   ").replace(/, (Host|host|path|mux)/g,",   $1")
+    cnt = cnt.replace(/(^|\n)- /g, "$1  - ").replace(/    - /g,"  - ").replace(/([,{]\s*[A-Za-z0-9_\-\"']+):(?!\s)/g,"$1: ").replace(/\,\"/g,", \"").replace(/: {\s{0,1}/g, ": {,   ").replace(/, (Host|host|path|mux)/g,",   $1")
     //2022-04-11 remove tls|skip from replace(/, (Host|host|path|mux)/g,",   $1")
     console.log("1st:\n"+cnt)
     cnt = cnt.replace(/{\s*name: (.*?), (.*?):/g,"{name: \"$1\", $2:").replace(/\"/gi,"").replace(/, short-id\"{0,1}/gi,",   short-id") //cnt.replace(/{\s*name: /g,"{name: \"").replace(/, (.*?):/,"\", $1:")
@@ -3347,8 +3347,7 @@ function Clash2QX(cnt) {
 
 //Clash ss type server
 function CSS2QX(cnt) {
-  // 兼容 oix.yaml 的 🇭🇰 IEPL 01 类命名：移除 flag emoji 及后续空格（匹配任意内容到第一个空白）
-  tag = "tag="+cnt.name.replace(/.+?\s/g,"")
+  tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi,"")
   ipt = cnt.server+":"+cnt.port
   pwd = "password=" + cnt.password
   mtd = "method="+ cnt.cipher
@@ -3372,8 +3371,7 @@ function CSS2QX(cnt) {
 
 //Clash ssr type server
 function CSSR2QX(cnt) {
-  // 兼容 oix.yaml 的 🇭🇰 IEPL 01 类命名：移除 flag emoji 及后续空格（匹配任意内容到第一个空白）
-  tag = "tag="+cnt.name.replace(/.+?\s/g,"")
+  tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi,"")
   ipt = cnt.server+":"+cnt.port
   pwd = "password=" + cnt.password
   mtd = "method="+ cnt.cipher
@@ -3406,7 +3404,7 @@ function CSSR2QX(cnt) {
 
 //Clash vmess type server
 function CV2QX(cnt) {
-  tag = "tag="+cnt.name.replace(/.+?\s/g,"")
+  tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi," ")
   ipt = cnt.server+":"+cnt.port
   pwd = "password=" + cnt.uuid
   mtd = "method="+ "aes-128-gcm" //cnt.cipher
@@ -3450,7 +3448,7 @@ function CV2QX(cnt) {
 
 //Clash Trojan
 function CT2QX(cnt) {
-  tag = "tag="+cnt.name.replace(/.+?\s/g,"")
+  tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi," ")
   ipt = cnt.server+":"+cnt.port
   pwd = "password=" + cnt.password
   otls = "over-tls=true"
@@ -3478,7 +3476,7 @@ function CT2QX(cnt) {
 
 // Clash http
 function CH2QX(cnt){
-    tag = "tag="+cnt.name.replace(/.+?\s/g,"")
+    tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi," ")
     ipt = cnt.server+":"+cnt.port
     uname = cnt.username ? "username=" + cnt.username : ""
     pwd = cnt.password && typeof(cnt.password) == "string" ? "password=" + cnt.password : ""
@@ -3496,7 +3494,7 @@ function CH2QX(cnt){
 
 // Clash socks5
 function CS52QX(cnt){
-    tag = "tag="+cnt.name.replace(/.+?\s/g,"")
+    tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi," ")
     ipt = cnt.server+":"+cnt.port
     uname = cnt.username ? "username=" + cnt.username : ""
     pwd = cnt.password && typeof(cnt.password) == "string" ? "password=" + cnt.password : ""
@@ -3514,7 +3512,7 @@ function CS52QX(cnt){
 
 // clash vless type ,2026-01-07
 function CVL2QX(cnt){
-  tag = "tag="+cnt.name.replace(/.+?\s/g,"")
+  tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi," ").replace(/(\"|\')/gi,"")
   ipt = cnt.server+":"+cnt.port
   pwd = "password=" + cnt.uuid
   mtd = "method=none" //cnt.cipher
