@@ -503,7 +503,7 @@ function ResourceParse() {
       if (Pcnt == 1 && total!=undefined) {$notify("⟦" + subtag + "⟧"+"解析后最终返回内容" , "节点数量: " +total.split("\n").length, total)}
       total = PRelay==""? Base64.encode(total) : ServerRelay(total.split("\n"),PRelay) //强制节点类型 base64 加密后再导入 Quantumult X, 如果是relay，则转换成分流类型
       if (PNS !=0) {
-        $notify("⚠️ 存在Quantumult X不支持的节点类型", "⚠️ 已忽略相关节点数，共计："+PNS+" 条", "⚠️ 当前版本不支持 Hysteria2，Anytls 等类型"+"\n"+"⚠️ 也不支持“http-upgrade/xhttp/grpc/mkcp/h2” 等类型vless")
+        $notify("⚠️ 存在Quantumult X不支持的节点类型", "⚠️ 已忽略相关节点数，共计："+PNS+" 条", "⚠️ 当前版本不支持 Hysteria2 等类型"+"\n"+"⚠️ 也不支持“http-upgrade/xhttp/grpc/mkcp/h2” 等类型vless")
       }
       if(Pflow==1) {
         //$notify("添加流量信息","xxx","xxxx")
@@ -513,7 +513,7 @@ function ResourceParse() {
     } else { // total length = 0
       if(Perror == 0) {
       if (PNS !=0) { // 全部为不支持类型节点
-        $notify("⚠️ Quantumult-X 不支持该订阅内的节点类型", "⚠️ 已忽略共计："+PNS+" 条不支持节点，剩余 0️⃣ 条", "⚠️ 当前版本不支持 Hysteria2，Anytls 等类型"+"\n"+"⚠️ 也不支持“http-upgrade/xhttp/grpc/mkcp/h2” 等类型vless")
+        $notify("⚠️ Quantumult-X 不支持该订阅内的节点类型", "⚠️ 已忽略共计："+PNS+" 条不支持节点，剩余 0️⃣ 条", "⚠️ 当前版本不支持 Hysteria2 等类型"+"\n"+"⚠️ 也不支持“http-upgrade/xhttp/grpc/mkcp/h2” 等类型vless")
       } else { // 其它原因
         $notify("❓❓ 该订阅 ➟ "+ "⟦" + subtag + "⟧ 解析后无有效节点", "⚠️⚠️ 解析后 Quantumult-X 支持节点数为 0️⃣ 条", "🚥🚥 请自行检查相关参数、确认节点类型, 或者点击通知跳转并发送链接反馈", bug_link)
       } 
@@ -589,7 +589,7 @@ function Type_Check(subs) {
     var type = "unknown"
     var RuleK = ["host,", "-suffix,", "domain,", "-keyword,", "ip-cidr,", "ip-cidr6,",  "geoip,", "user-agent,", "ip6-cidr,", "ip-asn"];
     var DomainK = ["domain-set,"]
-    var QuanXK = ["shadowsocks=", "trojan=", "vmess=", "http=", "socks5=", "vless="];
+    var QuanXK = ["shadowsocks=", "trojan=", "vmess=", "http=", "socks5=", "vless=", "anytls="];
     var SurgeK = ["=ss,", "=vmess,", "=trojan,", "=http,", "=custom,", "=https,", "=shadowsocks", "=shadowsocksr", "=sock5", "=sock5-tls"];
     var ClashK = ["proxies:","\"proxies\":"]
     var SubK = ["dm1lc3M", "c3NyOi8v", "CnNzOi8", "dHJvamFu", "c3M6Ly", "c3NkOi8v", "c2hhZG93", "aHR0cDovLw", "aHR0cHM6L", "CnRyb2phbjo", "aHR0cD0", "aHR0cCA","U1RBVFVT","dmxlc3M6"];
@@ -1592,7 +1592,7 @@ function Reality_Handle(cnt) {
 function Subs2QX(subs, Pudp, Ptfo, Pcert0, PTls13) {
   if (Pdbg) {$notify("subs", "node", subs)}
     var list0 = subs.split("\n");
-    var QuanXK = ["shadowsocks=", "trojan=", "vmess=", "http=","socks5=", "vless="];
+    var QuanXK = ["shadowsocks=", "trojan=", "vmess=", "http=","socks5=", "vless=", "anytls="];
     var SurgeK = ["=ss,", "=vmess,", "=trojan,", "=http,", "=https,", "=custom,", "=socks5", "=socks5-tls"];
     var LoonK = ["=shadowsocks", "=shadowsocksr", "=vless"]
     var QXlist = [];
@@ -1658,8 +1658,11 @@ function Subs2QX(subs, Pudp, Ptfo, Pcert0, PTls13) {
                     node = QX_TLS(Surge2QX(list0[i])[0], Pcert0, PTls13)
                 } else if (LoonK.some(NodeCheck)) { // Loon type
                     node = Loon2QX(list0[i])
-                } else if (type=="hysteria2" || type=="anytls") { //
-                  PNS=PNS+1 
+                } else if (type == "anytls") { // anytls URI 转换
+                  node = AT2QX(list0[i], Pudp, Ptfo, Pcert0)
+                  node = tag0 != "" ? URI_TAG(node, tag0) : node
+                } else if (type=="hysteria2") { //
+                  PNS=PNS+1
                 }
               if (Pdbg) {$notify(i, type, node)}
             } catch (e) {
@@ -1734,7 +1737,7 @@ function QX_TLS(cnt,Pcert0,PTls13) {
     cnt = cnt.replace(new RegExp("tag.*?\=", "gmi"), tls13+"tag=")
   }
   }
-  if (!/^(shadowsocks|trojan|vmess|vless)/.test(cnt.trim())) { //关闭非 ss/ssr/trojan/vmess/vless 类型的 udp
+  if (!/^(shadowsocks|trojan|vmess|vless|anytls)/.test(cnt.trim())) { //关闭非 ss/ssr/trojan/vmess/vless/anytls 类型的 udp
     udp =  "udp-relay=false, "
     if(cnt.indexOf("udp-relay") != -1){
       var cnt = cnt.replace(RegExp("udp\-relay.*?\,", "gmi"), udp)
@@ -2236,6 +2239,37 @@ function TJ2QX(subs, Pudp, Ptfo, Pcert0, PTls13) {
     ntrojan.push(type + ip, pwd, obfs, pcert, thost, puri, pudp, ptfo,prlt,tag)
     QX = ntrojan.filter(Boolean).join(", ");
     //$notify("title","subtitle",QX)
+    return QX;
+}
+
+// AnyTLS URI 转换成 QX 格式
+// anytls://password@host:port?insecure=1&sni=example.com#tag
+// 目标格式: anytls=host:port, password=pwd, over-tls=true, tls-host=xxx, tls-verification=true/false, udp-relay=true, fast-open=false, tag=xxx
+function AT2QX(subs, Pudp, Ptfo, Pcert0) {
+    var natls = []
+    var cnt = subs.split("anytls://")[1]
+    type = "anytls=";
+    if (cnt.indexOf(":443") != -1) {
+        ip = cnt.split("@")[1].split(":443")[0] + ":443";
+    } else {
+        ip = cnt.split("@")[1].split("?")[0].split("\n")[0].split("#")[0].trim();
+    }
+    pwd = cnt.split("@")[0] ? "password=" + decodeURIComponent(cnt.split("@")[0]) : "";
+    obfs = "over-tls=true";
+    pcert = (cnt.indexOf("insecure=1") != -1 || cnt.indexOf("allowInsecure=1") != -1 || cnt.indexOf("skip-cert-verify=true") != -1) ? "tls-verification=false" : "tls-verification=true";
+    thost = cnt.indexOf("sni=") != -1 ? "tls-host=" + cnt.split("sni=")[1].split(/&|#/)[0] : "";
+    thost = (thost == "" && cnt.indexOf("peer=") != -1) ? "tls-host=" + cnt.split("peer=")[1].split(/&|#/)[0] : thost;
+    if (Pcert0 == 0) {
+        pcert = "tls-verification=false"
+    } else if (Pcert0 == 1) {
+        pcert = "tls-verification=true"
+    }
+    pudp = (Pudp == 1 || cnt.indexOf("udp=1") != -1) ? "udp-relay=true" : "udp-relay=false";
+    ptfo = (Ptfo == 1 || cnt.indexOf("tfo=1") != -1) ? "fast-open=true" : "fast-open=false";
+    tag = cnt.indexOf("#") != -1 ? "tag=" + decodeURIComponent(cnt.split("#").slice(-1)[0]) : "tag= [anytls]" + ip;
+    prlt = Reality_Handle(cnt)
+    natls.push(type + ip, pwd, obfs, pcert, thost, prlt, pudp, ptfo, tag)
+    QX = natls.filter(Boolean).join(", ");
     return QX;
 }
 
@@ -3322,6 +3356,8 @@ function Clash2QX(cnt) {
         node = CS52QX(node)
       } else if (typecc == "vless"){
         node = CVL2QX(node)
+      } else if (typecc == "anytls"){
+        node = CAT2QX(node)
       } else { // not support type
         PNS = PNS+1
         if (Pdbg==1) { // 通知提示
@@ -3474,6 +3510,26 @@ function CT2QX(cnt) {
 
 }
 
+// Clash AnyTLS 转换成 QX 格式
+function CAT2QX(cnt) {
+  tag = "tag=" + cnt.name.replace(/\\U.+?\s{1}/gi, " ").replace(/(\"|\')/gi, "")
+  ipt = cnt.server + ":" + cnt.port
+  pwd = "password=" + cnt.password
+  otls = "over-tls=true"
+  thost = cnt["sni"] ? "tls-host=" + cnt["sni"] : ""
+  thost = (thost == "" && cnt["servername"]) ? "tls-host=" + cnt["servername"] : thost
+  cert = cnt["skip-cert-verify"] ? "tls-verification=false" : "tls-verification=true"
+  if (Pcert0 == 1) {
+    cert = "tls-verification=true"
+  } else if (Pcert0 == 0) {
+    cert = "tls-verification=false"
+  }
+  udp = cnt.udp == false ? "udp-relay=false" : "udp-relay=true"
+  tfo = cnt.tfo ? "fast-open=true" : "fast-open=false"
+  node = "anytls=" + [ipt, pwd, otls, thost, cert, udp, tfo, tag].filter(Boolean).join(", ")
+  return node
+}
+
 // Clash http
 function CH2QX(cnt){
     tag = "tag="+cnt.name.replace(/\\U.+?\s{1}/gi," ")
@@ -3562,7 +3618,7 @@ function CVL2QX(cnt){
 
 // UDP/TFO 参数 (强制 surge/quanx 类型转换)
 function XUDP(cnt,pudp) {
-  var udp = pudp == 1 && /^(shadowsocks|trojan|vmess|vless)/.test(cnt.trim()) ? "udp-relay=true, " : "udp-relay=false, "
+  var udp = pudp == 1 && /^(shadowsocks|trojan|vmess|vless|anytls)/.test(cnt.trim()) ? "udp-relay=true, " : "udp-relay=false, "
   if(cnt.indexOf("udp-relay") != -1){
     var cnt0 = cnt.replace(RegExp("udp\-relay.*?\,", "gmi"), udp)
   }else{
